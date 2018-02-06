@@ -58,6 +58,7 @@ class Train:
                 self.label = Label(self.childFrame,
                                    text='{} Line from {} toward {} -> {}'.format(route, station, destination, eta),
                                    bg='blue', fg='white', anchor=W)
+                self.label.config(font=('Courier', 26))
                 self.label.grid(row=j, sticky=W + E)
         self.master.after(self.UPDATE_TIME * 1000, self.update_frame)
 
@@ -108,6 +109,7 @@ class Bus:
                                    text='Route {} from {} {} to {} -> {}'.format(route, station, direction, destination,
                                                                                  eta),
                                    bg='blue', fg='white', anchor=W)
+                self.label.config(font=('Courier', 26))
                 self.label.grid(row=j, sticky=W + E)
         self.master.after(self.UPDATE_TIME * 1000, self.update_frame)
 
@@ -128,6 +130,6 @@ trainFrame.grid(row=0, column=0, sticky=NW)
 Train(trainFrame, TRAIN_API_KEY, TRAIN_STATION, UPDATE_TIME)
 
 busFrame = Frame(root, padx=5, bd=2, relief=GROOVE)
-busFrame.grid(row=0, column=1, sticky=NW)
+busFrame.grid(row=2, column=0, sticky=NW)
 Bus(busFrame, BUS_API_KEY, BUS_STATION, UPDATE_TIME)
 root.mainloop()
