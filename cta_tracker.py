@@ -26,14 +26,14 @@ class Train:
 
     def update_frame(self):
         try:
-            self.frame.destroy()
+            self.frame.destroy() # get rid of any old container frames so the new labels don't stack on each other
         except:
             pass
-        self.frame = Frame(self.master)
+        self.frame = Frame(self.master)  # create new parent frame to jam each train direction frame into
         self.frame.pack()
-        response = requests.get(
-            'http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx?key=' + self.TRAIN_API_KEY + '&mapid=' + self.TRAIN_STATION + '&outputType=JSON')
-        trains = response.json()['ctatt']['eta']
+        response = requests.get('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx?key=' + self.TRAIN_API_KEY
+                                + '&mapid=' + self.TRAIN_STATION + '&outputType=JSON')
+        trains = response.json()['ctatt']['eta'] # get rid of the wrappers
 
         # get direction data from feed
         directions = set(train['stpId'] for train in trains)
@@ -46,10 +46,10 @@ class Train:
             filteredTrains.append([train for train in trains if train['stpId'] == direction])
 
         for i, direction in enumerate(filteredTrains):
-            self.childFrame = Frame(self.frame, pady=5, bd=2, relief=GROOVE)
+            self.childFrame = Frame(self.frame, pady=5, bd=2, relief=GROOVE) # create new frame for each direction
             self.childFrame.grid_columnconfigure(0, weight=1)
             self.childFrame.grid(row=i, sticky=NW + NE)
-            for j, train in enumerate(direction):
+            for j, train in enumerate(direction): # create a new label for each train in a single direction
                 eta = datetime.strptime(train['arrT'].replace('T', " "), '%Y-%m-%d %H:%M:%S') - datetime.now()
                 eta = formatEta(eta)
                 destination = train['destNm']
@@ -79,8 +79,8 @@ class Bus:
             pass
         self.frame = Frame(self.master)
         self.frame.pack()
-        response = requests.get(
-            'http://www.ctabustracker.com/bustime/api/v2/getpredictions?key=' + self.BUS_API_KEY + '&stpid=' + self.BUS_STATION + '&format=json')
+        response = requests.get('http://www.ctabustracker.com/bustime/api/v2/getpredictions?key='
+                                + self.BUS_API_KEY + '&stpid=' + self.BUS_STATION + '&format=json')
         buses = response.json()['bustime-response']['prd']
 
         # get direction data from feed
