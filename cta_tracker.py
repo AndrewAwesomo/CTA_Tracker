@@ -34,32 +34,7 @@ class Train:
         response = requests.get('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx?key=' + self.TRAIN_API_KEY
                                 + '&mapid=' + self.TRAIN_STATION + '&outputType=JSON')
         trains = response.json()['ctatt']['eta'] # get rid of the wrappers
-
-        # get direction data from feed
-        directions = set(train['stpId'] for train in trains)
-        directions = list(directions)
-        directions.sort()
-
-        # filter train directions
-        filteredTrains = []
-        for direction in directions:
-            filteredTrains.append([train for train in trains if train['stpId'] == direction])
-
-        for i, direction in enumerate(filteredTrains):
-            self.childFrame = Frame(self.frame, pady=5, bd=2, relief=GROOVE) # create new frame for each direction
-            self.childFrame.grid_columnconfigure(0, weight=1)
-            self.childFrame.grid(row=i, sticky=NW + NE)
-            for j, train in enumerate(direction): # create a new label for each train in a single direction
-                eta = datetime.strptime(train['arrT'].replace('T', " "), '%Y-%m-%d %H:%M:%S') - datetime.now()
-                eta = formatEta(eta)
-                destination = train['destNm']
-                station = train['staNm']
-                route = train['rt']
-                self.label = Label(self.childFrame,
-                                   text='{} Line from {} toward {} -> {}'.format(route, station, destination, eta),
-                                   bg='blue', fg='white', anchor=W)
-                self.label.config(font=('Courier', 26))
-                self.label.grid(row=j, sticky=W + E)
+        build_labels(self.frame, trains)
         self.master.after(self.UPDATE_TIME * 1000, self.update_frame)
 
 
@@ -83,35 +58,59 @@ class Bus:
         response = requests.get('http://www.ctabustracker.com/bustime/api/v2/getpredictions?key='
                                 + self.BUS_API_KEY + '&stpid=' + self.BUS_STATION + '&format=json')
         buses = response.json()['bustime-response']['prd']
-
-        # get direction data from feed
-        directions = set(bus['stpid'] for bus in buses)
-        directions = list(directions)
-        directions.sort()
-
-        # filter bus directions
-        filteredBuses = []
-        for direction in directions:
-            filteredBuses.append([bus for bus in buses if bus['stpid'] == direction])
-
-        for i, direction in enumerate(filteredBuses):
-            self.childFrame = Frame(self.frame, pady=5, bd=2, relief=GROOVE)  # create new frame for each direction/stop
-            self.childFrame.grid_columnconfigure(0, weight=1)
-            self.childFrame.grid(row=i, sticky=NW + NE)
-            for j, bus in enumerate(direction):
-                eta = datetime.strptime(bus['prdtm'], '%Y%m%d %H:%M') - datetime.now()
-                eta = formatEta(eta)
-                destination = bus['des']
-                direction = bus['rtdir']
-                station = bus['stpnm']
-                route = bus['rt']
-                self.label = Label(self.childFrame,
-                                   text='Route {} from {} {} to {} -> {}'.format(route, station, direction, destination,
-                                                                                 eta),
-                                   bg='blue', fg='white', anchor=W)
-                self.label.config(font=('Courier', 26))
-                self.label.grid(row=j, sticky=W + E)
+        build_labels(self.frame, buses)
         self.master.after(self.UPDATE_TIME * 1000, self.update_frame)
+
+
+
+def build_labels(master, transits):
+    # get direction data from feed
+    if 'destSt' in transits[0]:  # for trains
+        directions = set(transit['stpId'] for transit in transits)
+    if 'des' in transits[0]:  # for buses
+        directions = set(transit['stpid'] for transit in transits)
+    directions = list(directions)
+    directions.sort()
+
+    # filter directions
+    filteredTrans = []
+    for direction in directions:
+        if 'destSt' in transits[0]:  # for trains
+            filteredTrans.append([transit for transit in transits if transit['stpId'] == direction])
+        if 'des' in transits[0]:  # for buses
+            filteredTrans.append([transit for transit in transits if transit['stpid'] == direction])
+
+    for i, direction in enumerate(filteredTrans):
+        childFrame = Frame(master, pady=5, bd=2, relief=GROOVE)  # create new frame for each direction/stop
+        childFrame.grid_columnconfigure(0, weight=1)
+        childFrame.grid(row=i, sticky=NW + NE)
+        for j, trans in enumerate(direction):
+            # for trains
+            if 'destSt' in trans:
+                eta = datetime.strptime(trans['arrT'].replace('T', " "), '%Y-%m-%d %H:%M:%S') - datetime.now()
+                eta = formatEta(eta)
+                destination = trans['destNm']
+                station = trans['staNm']
+                route = trans['rt']
+                label = Label(childFrame,
+                                   text='{} Line from {} toward {} -> {}'.format(route, station, destination, eta),
+                                   bg='blue', fg='white', anchor=W)
+
+            # for buses
+            if 'des' in trans:
+                eta = datetime.strptime(trans['prdtm'], '%Y%m%d %H:%M') - datetime.now()
+                eta = formatEta(eta)
+                destination = trans['des']
+                direction = trans['rtdir']
+                station = trans['stpnm']
+                route = trans['rt']
+                label = Label(childFrame,
+                                   text='Route {} from {} {} to {} -> {}'.format(route, station, direction, destination,
+                                                                                 eta), bg='blue', fg='white', anchor=W)
+
+            label.config(font=('Courier', 26))
+            label.grid(row=j, sticky=W + E)
+    return master
 
 
 def formatEta(eta):
