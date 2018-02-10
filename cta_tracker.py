@@ -106,6 +106,7 @@ def build_labels(master, transits):
         childFrame.grid_columnconfigure(0, weight=1)
         childFrame.grid(row=i, sticky=NW + NE)
         for j, trans in enumerate(direction):
+            entry = ""
             # for trains
             if 'destSt' in trans:
                 eta = datetime.strptime(trans['arrT'].replace('T', " "), '%Y-%m-%d %H:%M:%S') - datetime.now()
@@ -113,9 +114,7 @@ def build_labels(master, transits):
                 destination = trans['destNm']
                 station = trans['staNm']
                 route = trans['rt']
-                label = Label(childFrame,
-                                   text='{} Line from {} toward {} -> {}'.format(route, station, destination, eta),
-                                   bg='blue', fg='white', anchor=W)
+                entry += '{} Line from {} toward {} -> {}'.format(route, station, destination, eta)
 
             # for buses
             if 'des' in trans:
@@ -125,10 +124,9 @@ def build_labels(master, transits):
                 direction = trans['rtdir']
                 station = trans['stpnm']
                 route = trans['rt']
-                label = Label(childFrame,
-                                   text='Route {} from {} {} to {} -> {}'.format(route, station, direction, destination,
-                                                                                 eta), bg='blue', fg='white', anchor=W)
+                entry += 'Route {} from {} {} to {} -> {}'.format(route, station, direction, destination, eta)
 
+            label = Label(childFrame, text=entry, bg='blue', fg='white', anchor=W)
             label.config(font=('Courier', 26))
             label.grid(row=j, sticky=W + E)
     return master
