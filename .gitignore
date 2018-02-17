@@ -1,2 +1,6 @@
 api_keys.txt
 /.idea
+/__pycache__
+cta_tracker.exe
+cta_tracker.spec
+
